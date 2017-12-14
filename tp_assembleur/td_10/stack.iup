@@ -1,0 +1,12 @@
+ff10  origine
+ff10  debut d'execution
+6f80   emplacement : 65296  (0xff10)  ligne n° 19	DEBUT	LDW SP, #STACKA				// SP <- 0x1000		On initialise le pointeur de pile
+1000   emplacement : 65298  (0xff12) 
+6380   emplacement : 65300  (0xff14)  ligne n° 21			LDW R3, #0x1234				// R3 <- 0x1234
+1234   emplacement : 65302  (0xff16) 
+6280   emplacement : 65304  (0xff18)  ligne n° 22			LDW R2, #0x4321				// R2 <- 0x4321
+4321   emplacement : 65306  (0xff1a) 
+634f   emplacement : 65308  (0xff1c)  ligne n° 24			STW R3, -(SP)				// Empile le contenu de R3
+624f   emplacement : 65310  (0xff1e)  ligne n° 25			STW R2, -(SP)				// Empile le contenu de R2
+63bf   emplacement : 65312  (0xff20)  ligne n° 27			LDW R3, (SP)+				// Dipile le sommet de la pile dans R3
+62bf   emplacement : 65314  (0xff22)  ligne n° 28			LDW R2, (SP)+				// Dipile le sommet de la pile dans R2

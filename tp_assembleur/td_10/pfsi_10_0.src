@@ -1,0 +1,36 @@
+	// PFSI TD n°10 — Programme de base pour démarrer le TD10
+
+	// Sylvain CECCHETTO
+
+	// Programme de test o = |i - 3| / 2
+
+//__________________________________________________________________________________________
+
+	// Directives d'assemblage _____________________________________________________________
+
+		SEUIL EQU 3					// Constante concernant la soustraction
+		RESET_ADDRESS EQU 0xFFFA	// Adresse où pointe PC lors du clic sur le bouton reset
+		LOAD_ADDRESS EQU 0xFFDC		// Adresse de chargement
+		INA EQU 0xFFA0				// Adresse du port d'entrée
+		OUTA EQU 0xFFA2				// Adresse du port de sortie
+
+		ORG LOAD_ADDRESS			// Adresse de chargement en mémoire
+		START RESET_ADDRESS			// Adresse de démarrage
+
+
+	// Programme principal _________________________________________________________________
+
+DEBUT	LDW R1, @INA				// R1 <- M[FFA0h]	R1 = M[FFA0h] = i
+		LDW R0, #SEUIL				// R0 <- 3			R0 = 3
+		SUB R1, R0, R0				// R0 <- R1 - R0	R0 = i - 3
+		JGE #POSIT-$-2				// saute si dernier résultat positif (PC <- PC # 4)
+		NEG R0, R0					// R0 <- -R0		R0 = -(i - 3)
+POSIT	SRA R0, R0					// R0 <- R0 / 2 	R0 = | i - 3 | / 2
+		STW R0, @OUTA				// M[FFA2h] <- R0		o = M[FFA2h] = | i - 3 | / 2
+		JEA @DEBUT					// Saute au début du programme (PC <- PC - 28)
+
+
+	// Mise en place du saut initial lors du démarrage du programme _________________________
+
+		RSB RESET_ADDRESS-$			// On réserve RESET_ADDRESS-$ octets afin de placer le prochaine jump à l'adresse RESET_ADDRESS
+		JEA @DEBUT					// Pour le reset (PC <- PC - 32)

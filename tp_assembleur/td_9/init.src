@@ -1,0 +1,7 @@
+		RESETA	EQU 0xFFFA	// @ de chargement
+		DEBUT	EQU 0xFFb0
+
+		ORG	RESETA	// chargement en LOADA
+		START	RESETA	// debut du programe en RESETA
+
+		JEA @DEBUT

@@ -1,0 +1,4 @@
+fffa  origine
+fffa  debut d'execution
+0950   emplacement : 65530  (0xfffa)  ligne n° 7			JEA @DEBUT
+ffb0   emplacement : 65532  (0xfffc) 

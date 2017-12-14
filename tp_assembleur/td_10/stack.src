@@ -1,0 +1,34 @@
+	// PFSI TD n°10 — Programme exemple utilisattion de la pile
+	// Sylvain CECCHETTO
+
+//__________________________________________________________________________________________
+
+	// Directives d'assemblage _____________________________________________________________
+
+		LOAD_ADDRESS EQU 0xFF10		// Adresse de chargement
+		STACKA equ 0x1000			// Adresse de base de la pile
+		SP EQU R15					// Ici on utilise le registre R15 pour le pointeur de pile SP
+
+		ORG LOAD_ADDRESS			// Adresse de chargement en mémoire
+		START DEBUT					// Adresse de démarrage
+
+	// Sous programme TOTO
+
+TOTO	instr1
+		instr2
+		RTS
+
+
+	// Programme principal_________________________________________________________________
+
+DEBUT	LDW SP, #STACKA				// SP <- 0x1000		On initialise le pointeur de pile
+		
+		LDW R3, #0x1234				// R3 <- 0x1234
+		LDW R2, #0x4321				// R2 <- 0x4321
+		
+		STW R3, -(SP)				// Empile le contenu de R3
+		STW R2, -(SP)				// Empile le contenu de R2
+
+		LDW R3, (SP)+				// Dépile le sommet de la pile dans R3
+		LDW R2, (SP)+				// Dépile le sommet de la pile dans R2
+

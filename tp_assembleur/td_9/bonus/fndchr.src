@@ -1,0 +1,57 @@
+// fichier fndchr.src
+// auteur: Alexandre Parodi (et Paul McCartney !)
+//
+// programme de recherche du caractère (d'adresse CHARA) dans une chaîne de caractères (d'adresse STRINGA)
+// fournit l'index de la première occurence du caractère dans la chaîne (ou -1 si pas trouvé) à l'adresse IDXA.
+// ensuite attend l'initialisation.
+//
+// définition des symboles
+LOADA       equ 0xFF60             // adresse de chargement (on met ce qu'on veut, a priori adresse forte)
+RESETA      equ 0xFFFA             // adresse d'initialisation (toujours FFFA)
+NUL         equ 0                  // code ASCII du caractère NUL (qui termine toute chaîne de caractères)
+STRING_MAX_LENGTH equ 80           // longueur maximale de la chaîne de caractères (y compris NUL) en octets
+NOFIND_CODE equ -1                 // code retourné si caractère non trouvé
+
+            org   LOADA            // "loader" charge l'exécutable à partir de l'adresse LOADA
+            start PROGA            // "launcher" démarre l'exécution à partir de l'instruction en PROGA
+
+CHARA       rsw 1                  // case pour entrer le caractère à rechercher juste au début de la zone données
+                                   // le caractère doit être dans le Byte gauche du mot mmémoire !
+IDXA        rsw 1                  // case pour sortie du no du caractère trouvé
+
+STRINGA     string "Desmond has a barrow in the market place, Molly is the singer in a band" // chaîne de caractères
+
+            rsb STRINGA + STRING_MAX_LENGTH - $ // réserve le reste de la zone de données pour que sa taille soit fixe
+
+			// Place le plus possible de choses en registre dès le début, afin d'accélérer l'exécution
+//PROGA     LDB R1, @CHARA         // R1 = code du caractère à trouver 
+                                   // mais pas de LD en mode direct: remplacé par les deux instructions suivantes
+PROGA       LDW R1, #CHARA         // R1 = adresse du caractère à trouver
+            LDB R1, (R1)           // R1 = code du caractère à trouver
+            LDW R2, #NUL           // R2 = code du caractère NUL (fin de chaîne)
+            LDW R3, #STRINGA       // R3 pointe sur le premier caractère de la chaîne
+
+			// boucle: optimisée pour aller vite
+LOOP        LDB R0, (R3)+          // charge le code du caractère courant dans R0 puis R3 pointe sur le suivant
+            CMP R0, R1             // compare le caractère de la chaîne avec celui à trouver
+            BEQ FOUND-$-2          // si c'est le même: sort de la boucle en FOUND
+            CMP R0, R2             // sinon compare le caractère avec le dernier (i.e. NUL)
+            BNE LOOP-$-2           // si ce n'est pas le dernier: boucle en LOOP
+
+            LDW R3, #NOFIND_CODE   // on est arrivé au bout sans trouver: charge R3 avec NOFIND_CODE (-1)
+            BMP END_PROG-$-2       // saute en END_PROG
+
+
+       
+//FOUND     ADI R3, R3, #-1-STRINGA // R3 pointe après le caractère trouvé: on soustrayant 1 il pointe sur le bon 
+                                    // en soustrayant l'adresse de base de la chaîne STRINGA, on a son numéro
+                                    // mais pas de ADI dans RISC ! Remplacée par les deux instructions suivantes
+FOUND       LDW R0, #1+STRINGA      // charge STRINGA + 1 dans R0
+            SUB R3, R0, R3          // R3 -= R0 : R3 = n° du caractère trouvé dans la chaîne
+//END_PROG  STW R3, @IDXA           // sauve le no dans la case d'adresse IDXA
+                                    // mais pas de ST en mode direct @, remplacé par les deux instructions suivantes
+END_PROG    STW R3, #IDXA           // charge IDXA dans R3
+            STW R3, (R3)            // sauve le contenu de R3 dans la case pointée par R3=IDXA
+FOREVER     BMP FOREVER-$-2         // boucle d'attente infinie (on en sort seulement par initialisation)
+            rsb RESETA - $          // réserve RESETA-$ octets pour que JEA qui suit soit à l'adresse RESETA
+            JEA @PROGA              // à l'initialisation va à l'instruction d'adresse PROGA, début du programme

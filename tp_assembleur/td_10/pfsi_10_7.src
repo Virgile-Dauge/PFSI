@@ -1,0 +1,59 @@
+	// PFSI TD n°10 — Question 7
+	// Sylvain CECCHETTO
+	// Programme de test o = |i - 3| / 2
+//__________________________________________________________________________________________
+
+	// Directives d'assemblage _____________________________________________________________
+
+		SEUIL EQU 3					// Constante concernant la soustraction
+		RESET_ADDRESS EQU 0xFFFA	// Adresse où pointe PC lors du clic sur le bouton reset
+		LOAD_ADDRESS EQU 0xFF10		// Adresse de chargement
+		INA EQU 0xFFA0				// Adresse du port d'entrée
+		OUTA EQU 0xFFA2				// Adresse du port de sortie
+		STACKA equ 0x1000			// Adresse de base de la pile
+		SP EQU R15					// Par convention on utilise le registre R15 pour le pointeur de pile SP
+
+		ORG LOAD_ADDRESS			// Adresse de chargement en mémoire
+		START DEBUT					// Adresse de démarrage
+
+
+	// Fonction Dist _______________________________________________________________________
+
+DISTA	STW R3, -(SP)				// Sauvegarde du conenu actuel de R3 dans la pile avant de s'en servire
+		LDW R3, #SEUIL				// R3 <- 3			R3 = 3
+		SUB R2, R3, R0				// R0 <- R2 - R3	R0 = i - 3
+		JSR @ABSA					// Appelle la fonction Abs à l'@ ABSA
+		SRA R0, R0					// R0 <- R0 / 2 	R0 = | i - 3 | / 2
+		LDW R3, (SP)+				// Restitution de l'ancien contenu de R3 en le dépilant
+		RTS 						// Retourne du sous-programme (dépile l'@ de retour dans PC)
+
+
+	// Fonction Abs _______________________________________________________________________
+
+ABSA	LDW R0, R0					// Pour actualiser les flags pour l'instruction suivante
+		JGE #POSIT-$-2				// saute si dernier résultat positif (PC <- #POSIT)
+		NEG R0, R0					// R0 <- -R0		R0 = -R0
+POSIT   RTS 						// Retourne du sous-programme (dépile l'@ de retour dans PC)
+
+
+	// Programme appelant (principal)_______________________________________________________
+
+DEBUT	LDW SP, #STACKA				// SP <- 0x1000		Initialise le pointeur de pile
+		LDW R3, #0xFFFF				// Donnée importante dans R3
+LOOP	LDW R2, @INA				// R2 <- M[FFA0h]	R2 = M[FFA0h] = i
+		LDW R4, #DISTA				// Charge l'@ DISTA de la fonciton Dist dans R4
+									// R4 pointe maintenant sur la fonction Dist
+		JSR (R4)					// Appelle la fonction DIST à l'@ DISTA, empile l'@ de retour, PC <- DISTA
+
+		STW R0, @OUTA				// M[FFA2h] <- R0		o = M[FFA2h] = | i - 3 | / 2
+		JEA @LOOP					// Saute au début du programme (PC <- LOOP)
+	
+
+
+	// Mise en place du saut initial lors du démarrage du programme _________________________
+
+		RSB RESET_ADDRESS-$			// On réserve RESET_ADDRESS-$ octets afin de placer le prochaine jump à l'@ RESET_ADDRESS
+		JEA @DEBUT					// Pour le reset (PC <- DEBUT)
+
+
+

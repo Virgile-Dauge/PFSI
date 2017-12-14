@@ -1,0 +1,18 @@
+		INA	EQU 0xFFA0	// @ du port // d'entrée
+		OUTA	EQU 0xFFA2	// @ du port // de sortie
+		LOADA	EQU 0xFFDC	// @ de chargement
+		SEUIL	EQU 3		// seuil
+
+		ORG	LOADA	// chargement en LOADA
+		START	RESETA	// debut du programe en RESETA
+		
+DEBUT		LDW R0, @INA	// R1 <- M[FFA0]
+		LDW R1, #SEUIL	// R1 <- 3
+		SUB R0, R1, R0	// R0 - R1 -> R0
+		JAE #POSIT-$-2	// si i-3 >= 0 alors jmp
+		NEG R0, R0	// -R0 -> R0
+POSIT		SRL R0, R0	// R0 / 2 -> R0
+		STW R0, @OUTA	// R0 <- M[FFA2]
+		JMP #DEBUT-$-2	// loop
+
+RESETA		JMP #DEBUT-$-2	

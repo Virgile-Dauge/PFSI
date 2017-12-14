@@ -1,0 +1,82 @@
+STACKA	equ 0x1000	// adresse du bas de la pile
+CNTMA	equ 0xFF00	// adresse du compteur principal
+INCM	equ 0x0010	// increment principal
+INIT	equ 0x0000	// valeur initiale du compteur
+MAX	equ 0x006F	// valeur maximum du compteur
+sp	equ r15		// pointeur de pile
+SP	equ R15		// pointeur de pile (en majuscules)
+INCI	equ 2		// incrément d'interruption
+CNTIA	equ 0xFF02	// adresse du compteur d'interruption CNTI
+
+RESETA	equ 0xFFFA	// adresse initiale lors du RESET
+LOADA	equ 0xFF20	// adresse de chargement
+STARTA	equ RESETA	// adresse de démarrage
+
+ITN_OFFSET	equ 32		// offset entre n° de ligne et n° de vecteur
+ITV_TABLE	equ 0x0000 	// adresse de la table des vecteurs d'exception
+ITV_SIZE 	equ 4		// taille des vecteurs d'interruption en octets
+ITV_PRGA_DISP	equ 0		// déplacement de l'adresse du programme 
+				// d'interruption à l'intérieur du vecteur
+		// ATTENTION: ce paramètre devrait être 2 d'après la documentation.
+
+IRQ		equ 2		// n° de ligne de requête d'interruption décodée dans cet exemple
+INT		equ (IRQ + ITN_OFFSET)			// n° d'interruption
+ITVA		equ (ITV_TABLE + INT * ITV_SIZE)	// adresse du vecteur d'interruption n°INT
+IT_PRGAA	equ (ITVA + ITV_PRGA_DISP) 		// adresse de l'adresse du programme d'interruption
+
+IRQBIS		equ 3
+INTBIS		equ (IRQBIS + ITN_OFFSET)
+ITVABIS		equ (ITV_TABLE + INTBIS * ITV_SIZE)	// adresse du vecteur d'interruption n°INT
+IT_PRGABISA	equ (ITVABIS + ITV_PRGA_DISP) 		// adresse de l'adresse du programme d'interruption
+
+		org LOADA	// définition de l'adresse d'ORiGine (chargement)
+		start STARTA	// définition de l'adresse de démarrage
+
+// PROGRAMME d'INTERRUPTION
+IT_PRGA		stw r0, -(sp)	// sauve la valeur du registre r0
+		ldw r0, @CNTIA	// r0 <- M[CNTMI]	R0 = CNTI
+		adq INCI, r0	// INCM + r0 -> r0
+		stw r0, @CNTIA	// r0 -> CNTI
+		eni		// IF <- 1; valide les interruptions
+		ldw r0, (sp)+	// restaure la valeur du registre r0
+		rti		// retour d'interruption
+
+// PROGRAMME d'INTERRUPTION bis
+IT_PRGABIS		stw r0, -(sp)	// sauve la valeur du registre r0
+		ldw r0, @CNTMA	// r0 <- M[CNTMA]	R0 = CNTM
+		adq -1, r0	// INCM + r0 -> r0
+		stw r0, @CNTMA	// r0 -> CNTM
+		eni		// IF <- 1; valide les interruptions
+		ldw r0, (sp)+	// restaure la valeur du registre r0
+		rti		// retour d'interruption
+
+// INITIALISATION
+MAIN_PRGA	ldw sp, #STACKA	// sp <- STACKA;	initialise la pile
+		ldw r0, #IT_PRGA // r0 <- IT_PRGA
+		stw r0, @IT_PRGAA // M[IT_PRGAA] <- IT_PRGA initialise vecteur
+
+		ldw r0, #IT_PRGABIS // r0 <- IT_PRGABIS
+		stw r0, @IT_PRGABISA // M[IT_PRGABISA] <- IT_PRGABIS initialise vecteur
+
+		ldw r0, #INIT	// R0 <- 0; 	R0 = 0
+		stw r0, @CNTIA	// R0 -> M[CNTMA] ;	initialise CNTI
+		stw r0, @CNTMA	// R0 -> M[CNTMA] ;	initialise CNTM
+		eni		// valide les interruptions
+
+// BOUCLE
+LOOP		dsi
+		ldw r0, @CNTMA	// r0 <- M[CNTMA]	R0 = CNTM
+		adq INCM, r0	// r0 <- R0 + INCM
+		ldw r1, #MAX	// r1 <- MAX
+		cmp r0, r1	// indicateurs(r0 - r1) -> SR
+		ble OK-$-2	// si r0 <= r1 alors branche en OK
+		ldq INIT, r0	// r0 <- INIT
+OK		stw r0, @CNTMA	// r0 -> CNT
+		eni		// valide les interruptions
+		ldw r0, #INT
+		trp #INT
+		bmp LOOP-$-2	// branche en LOOP
+
+// RESET
+FILL		rsb	RESETA - FILL	// remplit RESETA - FILL octets
+		jea	@MAIN_PRGA	// saute en MAIN_PRGA

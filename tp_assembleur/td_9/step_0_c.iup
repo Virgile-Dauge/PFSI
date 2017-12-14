@@ -1,0 +1,19 @@
+ffdc  origine
+fffa  debut d'execution
+6180   emplacement : 65500  (0xffdc)  ligne n° 4			LDW R1, #0xFFA0	// R1 <- FFA0h
+ffa0   emplacement : 65502  (0xffde) 
+60a1   emplacement : 65504  (0xffe0)  ligne n° 5			LDW R0, (R1)	// R0 <- M[R1]
+6180   emplacement : 65506  (0xffe2)  ligne n° 6			LDW R1, #3	// R1 <- 3
+0003   emplacement : 65508  (0xffe4) 
+f010   emplacement : 65510  (0xffe6)  ligne n° 7			SUB R0, R1, R0	// R0 - R1 -> R0
+0880   emplacement : 65512  (0xffe8)  ligne n° 8			JAE #4		// si i-3 >= 0 alors jmp
+0004   emplacement : 65514  (0xffea) 
+4700   emplacement : 65516  (0xffec)  ligne n° 9			NEG R0, R0	// -R0 -> R0
+4200   emplacement : 65518  (0xffee)  ligne n° 10			SRL R0, R0	// R0 / 2 -> R0
+6180   emplacement : 65520  (0xfff0)  ligne n° 11			LDW R1, #0xFFA2	// R1 <- FFA2h
+ffa2   emplacement : 65522  (0xfff2) 
+6021   emplacement : 65524  (0xfff4)  ligne n° 12			STW R0, (R1)	// coucou
+0180   emplacement : 65526  (0xfff6)  ligne n° 13			JMP #-28	// loop
+ffe4   emplacement : 65528  (0xfff8) 
+0180   emplacement : 65530  (0xfffa)  ligne n° 14			JMP #-32
+ffe0   emplacement : 65532  (0xfffc) 

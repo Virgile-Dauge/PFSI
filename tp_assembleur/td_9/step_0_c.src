@@ -1,0 +1,14 @@
+		ORG	0xFFDC	// chargement en FFDC
+		START	0xFFFA	// debut du programe ne FFFA
+
+		LDW R1, #0xFFA0	// R1 <- FFA0h
+		LDW R0, (R1)	// R0 <- M[R1]
+		LDW R1, #3	// R1 <- 3
+		SUB R0, R1, R0	// R0 - R1 -> R0
+		JAE #4		// si i-3 >= 0 alors jmp
+		NEG R0, R0	// -R0 -> R0
+		SRL R0, R0	// R0 / 2 -> R0
+		LDW R1, #0xFFA2	// R1 <- FFA2h
+		STW R0, (R1)	// coucou
+		JMP #-28	// loop
+		JMP #-32
